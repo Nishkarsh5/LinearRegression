@@ -3,6 +3,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+from math import sqrt
+import statsmodels.api as sm
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 # Importing LabourEarningPrediction.csv
@@ -62,3 +66,51 @@ y = LabourData['Earnings_1978']
 
 #Splitting the data in Training and Test set
 X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.7, random_state = 100)
+
+
+#Performing Linear Regression
+#creating linearreggression object
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+
+i = lr.intercept_
+print("Intercept = " + str(i))
+
+#coefficients
+coeff_df = pd.DataFrame(lr.coef_, X_test.columns, columns = ['coefficient'])
+print(coeff_df)
+
+
+#Making predictions using the model
+y_pred = lr.predict(X_test)
+
+
+#Model performance metrics
+#Coefficients of determination(R square)
+mse = mean_squared_error(y_test, y_pred)
+r_squared = r2_score(y_test, y_pred)
+
+rmse = sqrt(mse)
+
+print('Mean squared error      : ',mse)
+print('Root mean squared error : ',rmse)
+print('r squared value         : ',r_squared)
+
+
+#Cheacking P-value using statsmodels
+X_train_sm = X_train
+X_train_sm = sm.add_constant(X_train_sm)
+
+lr_1 = sm.OLS(y_train, X_train_sm).fit()
+
+print(lr_1.params)
+
+print(lr_1.summary())
+
+
+#Variance Inflation Factor
+vif = pd.DataFrame()
+vif["VIF Factor"] = [variance_inflation_factor(X.values,i) for i in range(X.shape[1])]
+vif["features"] = X.columns
+
+print(vif.round(2))
